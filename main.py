@@ -246,14 +246,14 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
 if __name__ == "__main__":
-    os.system("rm -rf data")
+    # os.system("rm -rf data")
     if not os.path.exists("./data"):
         os.system("mkdir data")
-    args = sys.argv
-    all_tweets = scrape(to_search=args[1])
-    clean_data(all_tweets)
+    # args = sys.argv
+    # all_tweets = scrape(to_search=args[1])
+    # clean_data(all_tweets)
     # print(all_info)
-    # df = pd.read_pickle("./data/clean.pkl")
-    # process_data(df)
+    df = pd.read_pickle("./data/clean.pkl")
+    process_data(df)
     show_out(all_info)
-    app.run_server(debug=True)
+    app.run_server(debug=True, host="0.0.0.0")
