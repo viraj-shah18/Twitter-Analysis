@@ -50,7 +50,7 @@ schedule==0.6.0
 six==1.15.0
 soupsieve==2.1
 toml==0.10.2
-twint==2.1.21
+twint==2.1.20
 typed-ast==1.4.1
 typing-extensions==3.7.4.3
 urllib3==1.26.2
