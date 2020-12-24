@@ -264,17 +264,17 @@ def clean_data(name, tweet_list=None):
 # *COMMENT OUT AFTER FIRST INSTALL
 os.system("pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint")
 
-
-all_info = dict()
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-
 if __name__ == "__main__":
+    all_info = dict()
     # os.system("rm -rf data")
     if not os.path.exists("./data"):
         os.system("mkdir data")
     args = sys.argv
+    if len(args)==1:
+        args.append("#EMNLP2020")
     if not os.path.exists(f"./data/clean_{args[1]}.pkl"):
         all_tweets = scrape(to_search=args[1])
         clean_data(args[1], all_tweets)
