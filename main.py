@@ -262,7 +262,7 @@ def clean_data(name, tweet_list=None):
 
 # to import latest version of twint
 # *COMMENT OUT AFTER FIRST INSTALL
-# os.system("pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint")
+os.system("pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint")
 
 
 all_info = dict()
