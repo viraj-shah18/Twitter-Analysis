@@ -141,7 +141,7 @@ def show_out(all_info):
                     dcc.Graph(id="example-graph", figure=all_info["month_plot"]),
                 ),
                 html.Div(
-                    dcc.Graph(id="example-graph2", figure=all_info["month_plot"]),
+                    dcc.Graph(id="example-graph2", figure=all_info["day_plot"]),
                 )
             ],
             style={"columnCount": 2, "margin-top":"30px"},
@@ -149,6 +149,24 @@ def show_out(all_info):
 
         ]
     )
+
+def plot_daily(df):
+    df["day"] = df["date"].apply(lambda x: int(x.split("-")[2]) if int(x.split("-")[1]) == all_info["month_highest"] else -1)
+    day_data = df["day"].value_counts().to_dict()
+    day_data2 = OrderedDict()
+    for key in range(1, 32):
+        if key not in day_data.keys():
+            continue
+        else:
+            day_data2[key] = day_data[key]
+    fig = px.bar(
+        x=day_data2.keys(),
+        y=day_data2.values(),
+        labels={"x": "day", "y": "Activity"},
+    )
+    li_ = list(day_data.keys())
+    all_info["day_highest"] = li_[1] if li_[0]==-1 else li_[0]
+    all_info["day_plot"] = fig
 
 
 def plot_monthly(df):
@@ -179,6 +197,7 @@ def plot_monthly(df):
         y=month_data2.values(),
         labels={"x": "month", "y": "Activity"},
     )
+    all_info["month_highest"] = names.index(list(month_data.keys())[0]) + 1
     all_info["month_plot"] = fig
     # fig.show()
 
@@ -189,9 +208,10 @@ def process_data(df):
     print_top(df, "hashtags")
     print_top(df, "urls")
     plot_monthly(df)
+    plot_daily(df)
 
 
-def clean_data(tweet_list=None):
+def clean_data(name, tweet_list=None):
     if tweet_list is None:
         data_df = pd.read_csv("data/tweets.csv", header=0)
         data_df = data_df.drop(columns=["created_at"])
@@ -236,8 +256,13 @@ def clean_data(tweet_list=None):
     # print(data_df.head(2))
     process_data(data_df)
     # data_df.to_csv("./data/clean_data.csv")
-    with open("./data/clean.pkl", "wb") as f:
+    with open(f"./data/clean_{name}.pkl", "wb") as f:
         pickle.dump(data_df, f)
+
+
+# to import latest version of twint
+# *COMMENT OUT AFTER FIRST INSTALL
+# os.system("pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint")
 
 
 all_info = dict()
@@ -249,11 +274,12 @@ if __name__ == "__main__":
     # os.system("rm -rf data")
     if not os.path.exists("./data"):
         os.system("mkdir data")
-    # args = sys.argv
-    # all_tweets = scrape(to_search=args[1])
-    # clean_data(all_tweets)
-    # print(all_info)
-    df = pd.read_pickle("./data/clean.pkl")
-    process_data(df)
+    args = sys.argv
+    if not os.path.exists(f"./data/clean_{args[1]}.pkl"):
+        all_tweets = scrape(to_search=args[1])
+        clean_data(args[1], all_tweets)
+    else:
+        df = pd.read_pickle(f"./data/clean_{args[1]}.pkl")
+        process_data(df)
     show_out(all_info)
     app.run_server(debug=True, host="0.0.0.0")
