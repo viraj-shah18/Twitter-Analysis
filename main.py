@@ -8,7 +8,12 @@ import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
 import plotly.express as px
-import twint
+try:
+    import twint
+except ModuleNotFoundError:
+    os.system("pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint")
+    import twint
+
 
 
 def scrape(to_search=""):
@@ -259,10 +264,6 @@ def clean_data(name, tweet_list=None):
     with open(f"./data/clean_{name}.pkl", "wb") as f:
         pickle.dump(data_df, f)
 
-
-# to import latest version of twint
-# *COMMENT OUT AFTER FIRST INSTALL
-os.system("pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint")
 
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
