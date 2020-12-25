@@ -1,3 +1,9 @@
+"""
+Usage:
+python main.py <HASHTAG>
+
+This command scrapes the all tweets pertaining to that hashtag from 1st Jan till the date
+"""
 import os
 import pickle
 import sys
@@ -17,6 +23,7 @@ except ModuleNotFoundError:
         "pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint"
     )
     import twint
+
 
 
 def scrape(to_search=""):
@@ -59,7 +66,7 @@ def print_top(data_df, col_name):
     all_info[f"top 10 {col_name}"] = cnt.most_common(10)
 
 
-def print_stats(df):
+def get_stats(df):
     all_info["Twitter Activity"] = len(df.likes_count)
     all_info["Likes Counter"] = df.likes_count.sum()
     all_info["Retweets Counter"] = df.retweets_count.sum()
@@ -94,6 +101,7 @@ def show_out(all_info):
                 ],
                 style={"columnCount": 4, "textAlign": "center"},
             ),
+            html.Hr(),
             html.Div(
                 className="row",
                 children=[
@@ -101,7 +109,7 @@ def show_out(all_info):
                     html.H5(children="Top 10 mentions"),
                     html.H5(children="Top 10 URLs"),
                 ],
-                style={"columnCount": 3, "textAlign": "center", "margin-top": "50px"},
+                style={"columnCount": 3, "textAlign": "center", "margin-top": "10px"},
             ),
             html.Div(
                 className="row",
@@ -110,10 +118,13 @@ def show_out(all_info):
                         className="top10",
                         children=[
                             html.P(
-                                html.A(
-                                    f"#{i[0]}",
-                                    href=f"https://twitter.com/hashtag/{i[0]}?src=hashtag_click",
-                                )
+                                style={"line-height": 13},
+                                children=[
+                                    html.A(
+                                        f"#{i[0]}",
+                                        href=f"https://twitter.com/hashtag/{i[0]}?src=hashtag_click",
+                                    )
+                                ],
                             )
                             for i in all_info["top 10 hashtags"]
                         ],
@@ -122,7 +133,12 @@ def show_out(all_info):
                         className="top10",
                         children=[
                             html.P(
-                                html.A(f"@{i[0]}", href=f"https://twitter.com/{i[0]}")
+                                style={"line-height": 13},
+                                children=[
+                                    html.A(
+                                        f"@{i[0]}", href=f"https://twitter.com/{i[0]}"
+                                    )
+                                ],
                             )
                             for i in all_info["top 10 mentions"]
                         ],
@@ -130,7 +146,10 @@ def show_out(all_info):
                     html.Div(
                         className="top10",
                         children=[
-                            html.P(html.A(f"{i[0]}", href=f"{i[0]}"))
+                            html.P(
+                                style={"line-height": 13},
+                                children=[html.A(f"{i[0]}", href=f"{i[0]}")],
+                            )
                             for i in all_info["top 10 urls"]
                         ],
                     ),
@@ -149,38 +168,41 @@ def show_out(all_info):
                 style={"columnCount": 2, "margin-top": "30px"},
             ),
             html.Div(
-                style={"rowCount":2},
-                children = [html.Div(
-                    className="twitter-tweet twitter-tweet-rendered",
-                    children=[
-                        # html.Iframe(src = f"{encoder('https://twitter.com/anyuser/status/')}{all_info['tweet_ids'][i]}", height = "400px") for i in range(8)
-                        html.Iframe(
-                            style={
-                                "position": "static",
-                                "visibility": "visible",
-                                "display": "block",
-                                "flex-grow": 1,
-                                "scrolling": "no",
-                                "border": 0,
-                                "frame": "false",
-                                "hideCard":False,
-                                "margin-left":"15px",
-                            },
-                            src = f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
-                            lang="en",
-                            width="550px",
-                            height="550px",
-                        )
-                        for i in range(4)
-                    ],
-                    style={
-                        "display": "flex",
-                        "max-width": "550px",
-                        "width": "100%",
-                        "margin-top": "10px",
-                        "margin-bottom": "10px",
-                    },
-                ),
+                style={"textAlign": "center"}, children=[html.H4("Most Popular Tweets")]
+            ),
+            html.Div(
+                style={"rowCount": 2},
+                children=[
+                    html.Div(
+                        className="twitter-tweet twitter-tweet-rendered",
+                        children=[
+                            # html.Iframe(src = f"{encoder('https://twitter.com/anyuser/status/')}{all_info['tweet_ids'][i]}", height = "400px") for i in range(8)
+                            html.Iframe(
+                                style={
+                                    "position": "static",
+                                    "visibility": "visible",
+                                    "display": "block",
+                                    "flex-grow": 1,
+                                    "scrolling": "no",
+                                    "border": 0,
+                                    "frame": "false",
+                                    "margin-left": "15px",
+                                },
+                                src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
+                                lang="en",
+                                width="550px",
+                                height="550px",
+                            )
+                            for i in range(4)
+                        ],
+                        style={
+                            "display": "flex",
+                            "max-width": "550px",
+                            "width": "100%",
+                            "margin-top": "10px",
+                            "margin-bottom": "10px",
+                        },
+                    ),
                     html.Div(
                         className="twitter-tweet twitter-tweet-rendered",
                         children=[
@@ -194,19 +216,18 @@ def show_out(all_info):
                                     "border": 0,
                                     "frame": False,
                                     "width": "100%",
-                                    "margin-left":"15px",
+                                    "margin-left": "15px",
                                 },
-                                src = f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
+                                src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
                                 lang="en",
                                 width="550px",
                                 height="550px",
                             )
-                            for i in range(4,8)
+                            for i in range(4, 8)
                         ],
                         style={
                             "display": "flex",
                             "max-width": "550px",
-                            "max-height": "750px",
                             "margin-top": "10px",
                             "margin-bottom": "10px",
                         },
@@ -234,7 +255,9 @@ def plot_daily(df):
         x=day_data2.keys(),
         y=day_data2.values(),
         labels={"x": "day", "y": "Activity"},
-        title="Twitter Activity in the month of conference",
+    )
+    fig.update_layout(
+        title_text="Number of tweets during conference month", title_x=0.2
     )
     li_ = list(day_data.keys())
     all_info["day_highest"] = li_[1] if li_[0] == -1 else li_[0]
@@ -254,14 +277,15 @@ def plot_monthly(df):
         x=month_data2.keys(),
         y=month_data2.values(),
         labels={"x": "month", "y": "Activity"},
-        title="Twitter Activity in this year",
+        # title="Twitter Activity in this year",
     )
+    fig.update_layout(title_text="Number of Tweets over the year", title_x=0.28)
     all_info["month_highest"] = names.index(list(month_data.keys())[0]) + 1
     all_info["month_plot"] = fig
 
 
 def process_data(df):
-    print_stats(df)
+    get_stats(df)
     print_top(df, "mentions")
     print_top(df, "hashtags")
     print_top(df, "urls")
@@ -311,6 +335,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 if __name__ == "__main__":
     all_info = dict()
+    run_type = "1"
     names = [
         "Jan",
         "Feb",
@@ -337,4 +362,11 @@ if __name__ == "__main__":
         df = pd.read_pickle(f"./data/clean_{args[1]}.pkl")
         process_data(df)
     show_out(all_info)
-    app.run_server(host="0.0.0.0")
+
+    # FOR LOCAL MACHINE RUNNING Uncomment the line below
+    # run_type = "LOCAL"
+
+    if run_type == "LOCAL":
+        app.run_server(debug=True)
+    else:
+        app.run_server(host="0.0.0.0")
