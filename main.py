@@ -337,4 +337,4 @@ if __name__ == "__main__":
         df = pd.read_pickle(f"./data/clean_{args[1]}.pkl")
         process_data(df)
     show_out(all_info)
-    app.run_server()
+    app.run_server(host="0.0.0.0")
