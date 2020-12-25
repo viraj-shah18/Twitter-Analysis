@@ -149,33 +149,69 @@ def show_out(all_info):
                 style={"columnCount": 2, "margin-top": "30px"},
             ),
             html.Div(
-                className="twitter-tweet twitter-tweet-rendered",
-                children=[
-                    # html.Iframe(src = f"{encoder('https://twitter.com/anyuser/status/')}{all_info['tweet_ids'][i]}", height = "400px") for i in range(8)
-                    html.Iframe(
+                style={"rowCount":2},
+                children = [html.Div(
+                    className="twitter-tweet twitter-tweet-rendered",
+                    children=[
+                        # html.Iframe(src = f"{encoder('https://twitter.com/anyuser/status/')}{all_info['tweet_ids'][i]}", height = "400px") for i in range(8)
+                        html.Iframe(
+                            style={
+                                "position": "static",
+                                "visibility": "visible",
+                                "display": "block",
+                                "flex-grow": 1,
+                                "scrolling": "no",
+                                "border": 0,
+                                "frame": "false",
+                                "hideCard":False,
+                                "margin-left":"15px",
+                            },
+                            src = f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
+                            lang="en",
+                            width="550px",
+                            height="550px",
+                        )
+                        for i in range(4)
+                    ],
+                    style={
+                        "display": "flex",
+                        "max-width": "550px",
+                        "width": "100%",
+                        "margin-top": "10px",
+                        "margin-bottom": "10px",
+                    },
+                ),
+                    html.Div(
+                        className="twitter-tweet twitter-tweet-rendered",
+                        children=[
+                            html.Iframe(
+                                style={
+                                    "position": "static",
+                                    "visibility": "visible",
+                                    "display": "block",
+                                    "flex-grow": 1,
+                                    "scrolling": "no",
+                                    "border": 0,
+                                    "frame": False,
+                                    "width": "100%",
+                                    "margin-left":"15px",
+                                },
+                                src = f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
+                                lang="en",
+                                width="550px",
+                                height="550px",
+                            )
+                            for i in range(4,8)
+                        ],
                         style={
-                            "position": "static",
-                            "visibility": "visible",
-                            "display": "block",
-                            "flex-grow": 1,
-                            "scrolling": "no",
-                            "frameborder": "0",
-                            "frame": "false",
+                            "display": "flex",
+                            "max-width": "550px",
+                            "max-height": "750px",
+                            "margin-top": "10px",
+                            "margin-bottom": "10px",
                         },
-                        src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-2&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
-                        lang="en",
-                        width="550px",
-                        height="350px",
-                    )
-                    for i in range(8)
+                    ),
                 ],
-                style={
-                    "display": "flex",
-                    "max-width": "550px",
-                    "width": "100%",
-                    "margin-top": "10px",
-                    "margin-bottom": "10px",
-                },
             ),
         ]
     )
@@ -301,4 +337,4 @@ if __name__ == "__main__":
         df = pd.read_pickle(f"./data/clean_{args[1]}.pkl")
         process_data(df)
     show_out(all_info)
-    app.run_server(debug=True, host="0.0.0.0")
+    app.run_server()
