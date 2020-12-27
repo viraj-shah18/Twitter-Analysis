@@ -1,3 +1,3 @@
 ps: scale web=1
-
-web: python3 main.py
+worker: python setup.py
+web: gunicorn -b 0.0.0.0:8050 main:app.server
