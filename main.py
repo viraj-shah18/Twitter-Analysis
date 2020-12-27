@@ -21,8 +21,33 @@ external_stylesheets = [
     "https://codepen.io/chriddyp/pen/bWLwgP.css",
     dbc.themes.BOOTSTRAP,
 ]
+
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
+
+conf_options = ["ACL 2020", "EMNLP 2020", "COLING 2020", "EACL 2021"]
+
+app.layout = html.Div(
+    children=[
+        dcc.Location(
+            id="home-page",
+        ),
+        html.H2("Select Conference to view Twitter Discussion",style={"textAlign": "center", "margin-top": "10px"}),
+        html.Div(
+            [
+                dbc.DropdownMenu(
+                    [
+                        dbc.DropdownMenuItem(i, href=f"/{i.replace(' ', '')}")
+                        for i in conf_options
+                    ],
+                    label="Select One Conference",
+                ),
+            ]
+        ),
+        html.Br(),
+        html.Div(id="page-content"),
+    ],
+)
 
 
 def show_out(all_info):
@@ -178,35 +203,11 @@ def display_page(pathname):
 
 
 if __name__ == "__main__":
-    conf_options = ["ACL 2020", "EMNLP 2020", "COLING 2020", "EACL 2021"]
-    app.layout = html.Div(
-        children=[
-            dcc.Location(
-                id="home-page",
-            ),
-            html.H2("Select Conference to view Twitter Discussion",style={"textAlign": "center", "margin-top": "10px"}),
-            html.Div(
-                [
-                    dbc.DropdownMenu(
-                        [
-                            dbc.DropdownMenuItem(i, href=f"/{i.replace(' ', '')}")
-                            for i in conf_options
-                        ],
-                        label="Select One Conference",
-                    ),
-                ]
-            ),
-            html.Br(),
-            html.Div(id="page-content"),
-        ],
-    )
-
-
     # FOR LOCAL MACHINE RUNNING Uncomment the line below
-    run_type = "LOCAL"
-    # run_type = "PROD"
+    # run_type = "LOCAL"
+    run_type = "PROD"
 
     if run_type == "LOCAL":
-        app.run_server(debug=True, port=8051)
+        app.run_server(debug=True)
     else:
-        app.run_server(host="0.0.0.0", debug=True, port=8051)
+        app.run_server(host="0.0.0.0", debug=True)
