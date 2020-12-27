@@ -7,7 +7,7 @@ import sys
 import datetime
 try:
     import twint
-except ModuleNotFoundError:
+finally:
     os.system(
         "pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint"
     )

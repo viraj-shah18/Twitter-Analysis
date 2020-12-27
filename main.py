@@ -42,9 +42,10 @@ app.layout = html.Div(
                     ],
                     label="Select One Conference",
                 ),
-            ]
+            ],
+            style= {"textAlign": "center", "fontSize": "20px"}
         ),
-        html.Br(),
+        html.Hr(),
         html.Div(id="page-content"),
     ],
 )
