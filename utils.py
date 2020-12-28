@@ -10,7 +10,8 @@ try:
     import twint
 except ModuleNotFoundError:
     os.system(
-        "pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint"
+        "pip3 install git+git://github.com/ajctrl/twint@patch-1"
+        #"pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint"
     )
     import twint
 import logging as log
