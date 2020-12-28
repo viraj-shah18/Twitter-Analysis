@@ -25,28 +25,41 @@ external_stylesheets = [
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 
-conf_options = ["ACL 2020", "EMNLP 2020", "COLING 2020", "EACL 2021"]
+# TODO: ADD ACL 2020. Problem, most of the tweets were refering to football league
+conf_options = ["EMNLP 2020", "COLING 2020", "EACL 2021"]
 
 app.layout = html.Div(
     children=[
         dcc.Location(
             id="home-page",
         ),
-        html.H2("Select Conference to view Twitter Discussion",style={"textAlign": "center", "margin-top": "10px"}),
-        html.Div(
-            [
+        dbc.Row([
+            dbc.Col(html.H2("Select Conference to view Twitter Discussion",style={"textAlign": "right", "margin-top": "10px",  "fontSize": "20px"}),
+                width={"size": 6, "offset": 0}
+            ),
+            dbc.Col(
                 dbc.DropdownMenu(
                     [
-                        dbc.DropdownMenuItem(i, href=f"/{i.replace(' ', '')}")
+                        dbc.DropdownMenuItem(i, href=f"/{i.replace(' ', '')}", style={"fontSize": "10px"})
                         for i in conf_options
                     ],
                     label="Select One Conference",
+                    style={"textAlign": "left", "z-index": 999, "margin-top": "8px", "fontSize": "18px"}
                 ),
-            ],
-            style= {"textAlign": "center", "fontSize": "20px"}
+                width={"size": 2, "offset": 0}
+            ),
+            dbc.Col(
+                dbc.Button("Home (NLProc)", color="primary", className="mr-1", href="/", 
+                style={"textAlign": "left", "margin-top": "10px", "fontSize": "16px"}),
+                width={"size": 2, "offset": 0}
+            )],
         ),
         html.Hr(),
-        html.Div(id="page-content"),
+        dcc.Loading(
+            children = [html.Div(id="page-content")],
+            type="default",
+            id = "loading"
+            ),
     ],
 )
 
@@ -115,8 +128,12 @@ def show_out(all_info):
                 ],
                 style={"columnCount": 2, "margin-top": "30px"},
             ),
+            dbc.Row([
+                dbc.Col(dcc.Graph(id="graph3",figure=all_info["lang_pie"])),
+                dbc.Col(dcc.Graph(id="graph3",figure=all_info["lang_pie"])),
+            ]),
             html.Div(
-                style={"textAlign": "center"}, children=[html.H4("Most Popular Tweets")]
+                style={"textAlign": "center", "fontSize": "25px"}, children=[html.H4("Most Popular Tweets")]
             ),
             html.Div(
                 style={"rowCount": 2},
@@ -191,24 +208,30 @@ def show_out(all_info):
 @app.callback(Output("page-content", "children"), [Input("home-page", "pathname")])
 def display_page(pathname):
     all_info = dict()
+
+    # to add ACL (most of the tweets scraped refers to football league)
+    known = {"/EMNLP2020", "/COLING2020", "/EACL2021"}
+    
     if pathname == "/":
         log.info(f"time -> {pathname} - #NLProc")
         all_info["name"] = "NLProc"
         all_info = run_all("#NLProc", all_info)
         return show_out(all_info)
-    else:
+    elif pathname in known:
         log.info(f"time -> {pathname} - #{pathname[1:]}")
         all_info["name"] = pathname[1:]
         all_info = run_all(f"#{pathname[1:]}", all_info)
         return show_out(all_info)
+    else:
+        return html.Div(html.H1("Please select one from the above given conferences"))
 
 
 if __name__ == "__main__":
     # FOR LOCAL MACHINE RUNNING Uncomment the line below
-    # run_type = "LOCAL"
-    run_type = "PROD"
+    run_type = "LOCAL"
+    # run_type = "PROD"
 
     if run_type == "LOCAL":
-        app.run_server(debug=True)
+        app.run_server(debug=True, port=50787)
     else:
         app.run_server(host="0.0.0.0", debug=True)
