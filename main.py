@@ -130,10 +130,10 @@ def show_out(all_info):
             ),
             dbc.Row([
                 dbc.Col(dcc.Graph(id="graph3",figure=all_info["lang_pie"])),
-                dbc.Col(dcc.Graph(id="graph3",figure=all_info["lang_pie"])),
+                dbc.Col(dcc.Graph(id="graph4",figure=all_info["count_users"])),
             ]),
             html.Div(
-                style={"textAlign": "center", "fontSize": "25px"}, children=[html.H4("Most Popular Tweets")]
+                style={"textAlign": "center"}, children=[html.H1("Most Popular Tweets")]
             ),
             html.Div(
                 style={"rowCount": 2},
@@ -195,6 +195,43 @@ def show_out(all_info):
                         style={
                             "display": "flex",
                             "max-width": "550px",
+                            "margin-top": "10px",
+                            "margin-bottom": "10px",
+                        },
+                    ),
+                ],
+            ),
+            html.Div(
+                style={"textAlign": "center"}, children=[html.H1("Most Retweeted Tweets")]
+            ),
+            html.Div(
+                style={"rowCount": 2},
+                children=[
+                    html.Div(
+                        className="twitter-tweet twitter-tweet-rendered",
+                        children=[
+                            html.Iframe(
+                                style={
+                                    "position": "static",
+                                    "visibility": "visible",
+                                    "display": "block",
+                                    "flex-grow": 1,
+                                    "scrolling": "no",
+                                    "border": 0,
+                                    "frame": "false",
+                                    "margin-left": "15px",
+                                },
+                                src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['retweet_ids'][i]}&theme=light",
+                                lang="en",
+                                width="550px",
+                                height="550px",
+                            )
+                            for i in range(min(4, len(all_info["retweet_ids"])))
+                        ],
+                        style={
+                            "display": "flex",
+                            "max-width": "550px",
+                            "width": "100%",
                             "margin-top": "10px",
                             "margin-bottom": "10px",
                         },
