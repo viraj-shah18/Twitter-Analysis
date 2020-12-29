@@ -13,9 +13,6 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
 import plotly.express as px
 from utils import run_all, add_comas
-import logging as log
-
-log.basicConfig(filename="log.txt", filemode="a", level=log.INFO)
 
 external_stylesheets = [
     "https://codepen.io/chriddyp/pen/bWLwgP.css",
@@ -65,7 +62,6 @@ app.layout = html.Div(
 
 
 def show_out(all_info):
-    log.info(f"currently executing {all_info['name']}")
     return html.Div(
         children=[
             html.H1(
@@ -250,12 +246,10 @@ def display_page(pathname):
     known = {"/EMNLP2020", "/COLING2020", "/EACL2021"}
     
     if pathname == "/":
-        log.info(f"time -> {pathname} - #NLProc")
         all_info["name"] = "NLProc"
         all_info = run_all("#NLProc", all_info)
         return show_out(all_info)
     elif pathname in known:
-        log.info(f"time -> {pathname} - #{pathname[1:]}")
         all_info["name"] = pathname[1:]
         all_info = run_all(f"#{pathname[1:]}", all_info)
         return show_out(all_info)

@@ -14,9 +14,6 @@ except ModuleNotFoundError:
         #"pip3 install git+git://github.com/ajctrl/twint@patch-1"
     )
     import twint
-import logging as log
-
-log.basicConfig(filename="log2.txt", filemode="a", level=log.INFO)
 
 
 all_info = dict()
@@ -227,8 +224,6 @@ def process_data(df, all_info):
 
 def clean_data(name, tweet_list, all_info, first_run=False):
     data_df = pd.DataFrame([t.__dict__ for t in tweet_list])
-    log.info(data_df.keys())
-    log.info(data_df.head(2))
     if not (data_df.empty):
 
         data_df = data_df.rename(
