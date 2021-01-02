@@ -7,13 +7,6 @@ import sys
 import datetime
 import csv
 import twint
-# try:
-# except ModuleNotFoundError:
-#     os.system(
-#         "pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint"
-#         #"pip3 install git+git://github.com/ajctrl/twint@patch-1"
-#     )
-#     import twint
 
 
 all_info = dict()
@@ -275,6 +268,15 @@ def clean_data(name, tweet_list, all_info, first_run=False):
     all_info = process_data(final_df, all_info)
     return all_info
 
+
+def show_prev_tweets(name):
+    all_info = dict()
+    with open(f"./data/{name}.pkl", "rb") as f:
+        final_df = pd.read_pickle(f)
+    
+    all_info = process_data(final_df, all_info)
+    return all_info
+
 def add_comas(num):
     ans = ""
     pl = 0
@@ -292,6 +294,10 @@ def run_all(name, all_info, first_run=False):
     rel_date = 5
     if first_run:
         rel_date = 200
-    all_tweets = scrape(to_search=name, rel_date = rel_date)
-    all_info = clean_data(name, all_tweets, all_info, first_run=first_run)
+    try:
+        all_tweets = scrape(to_search=name, rel_date = rel_date)
+        all_info = clean_data(name, all_tweets, all_info, first_run=first_run)
+    except Exception:
+        all_info = show_prev_tweets(name)
+
     return all_info
