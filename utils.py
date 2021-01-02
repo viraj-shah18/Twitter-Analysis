@@ -6,14 +6,14 @@ import os
 import sys
 import datetime
 import csv
-try:
-    import twint
-except ModuleNotFoundError:
-    os.system(
-        "pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint"
-        #"pip3 install git+git://github.com/ajctrl/twint@patch-1"
-    )
-    import twint
+import twint
+# try:
+# except ModuleNotFoundError:
+#     os.system(
+#         "pip3 install --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint"
+#         #"pip3 install git+git://github.com/ajctrl/twint@patch-1"
+#     )
+#     import twint
 
 
 all_info = dict()
