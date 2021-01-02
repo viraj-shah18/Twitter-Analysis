@@ -269,8 +269,7 @@ def clean_data(name, tweet_list, all_info, first_run=False):
     return all_info
 
 
-def show_prev_tweets(name):
-    all_info = dict()
+def show_prev_tweets(name, all_info):
     with open(f"./data/{name}.pkl", "rb") as f:
         final_df = pd.read_pickle(f)
     
@@ -298,6 +297,6 @@ def run_all(name, all_info, first_run=False):
         all_tweets = scrape(to_search=name, rel_date = rel_date)
         all_info = clean_data(name, all_tweets, all_info, first_run=first_run)
     except Exception:
-        all_info = show_prev_tweets(name)
+        all_info = show_prev_tweets(name, all_info)
 
     return all_info
