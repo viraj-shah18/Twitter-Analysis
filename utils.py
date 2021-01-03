@@ -40,7 +40,7 @@ def scrape(to_search="", rel_date=5):
     fin = toda + datetime.timedelta(days=-rel_date)
     tweets_objects = []
     if to_search=="#ACL2020":
-        to_search = "ACL 2020" 
+        to_search = "#acl2020nlp" 
     c = twint.Config(
         Since=f"{fin.year}-{fin.month}-{fin.day}",
         Hide_output=True,

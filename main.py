@@ -22,8 +22,7 @@ external_stylesheets = [
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 
-# TODO: ADD ACL 2020. Problem, most of the tweets were refering to football league
-conf_options = ["EMNLP 2020", "COLING 2020", "EACL 2021"]
+conf_options = ["EMNLP 2020", "COLING 2020", "EACL 2021", "ACL 2020"]
 
 app.layout = html.Div(
     children=[
@@ -242,8 +241,7 @@ def show_out(all_info):
 def display_page(pathname):
     all_info = dict()
 
-    # to add ACL (most of the tweets scraped refers to football league)
-    known = {"/EMNLP2020", "/COLING2020", "/EACL2021"}
+    known = {"/EMNLP2020", "/COLING2020", "/EACL2021", "/ACL2020"}
     
     if pathname == "/":
         all_info["name"] = "NLProc"
