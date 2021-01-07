@@ -245,11 +245,11 @@ def display_page(pathname):
     
     if pathname == "/":
         all_info["name"] = "NLProc"
-        all_info = run_all("#NLProc", all_info)
+        run_all("#NLProc", all_info)
         return show_out(all_info)
     elif pathname in known:
         all_info["name"] = pathname[1:]
-        all_info = run_all(f"#{pathname[1:]}", all_info)
+        run_all(f"#{pathname[1:]}", all_info)
         return show_out(all_info)
     else:
         return html.Div(html.H1("Please select one from the above given conferences"))

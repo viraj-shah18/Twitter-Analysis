@@ -9,7 +9,6 @@ import csv
 import twint
 
 
-all_info = dict()
 names = [
         "Jan",
         "Feb",
@@ -47,8 +46,8 @@ def scrape(to_search="", rel_date=5):
         Search=to_search,
         Store_object=True,
         Store_object_tweets_list=tweets_objects,
-        # Store_csv = True,
-        # Output = "data2"
+        Store_csv = True,
+        Output = "data2"
     )
 
     twint.run.Search(c)
@@ -60,7 +59,7 @@ def top_tweets(df, all_info):
     df2 = df.nlargest(8, ["likes_count"])
     arr = df2["id"].to_list()
     all_info["tweet_ids"] = arr
-    return all_info
+    
 
 def top_retweets(df, all_info):
     df2 = df.nlargest(16, ["retweets_count"])
@@ -71,7 +70,7 @@ def top_retweets(df, all_info):
         if a not in top_tweet_:
             final_arr.append(a)
     all_info["retweet_ids"] = final_arr
-    return all_info
+    
 
 
 def print_top(data_df, col_name, all_info):
@@ -91,14 +90,14 @@ def print_top(data_df, col_name, all_info):
     all_info[f"top 10 {col_name}"] = cnt.most_common(10)
     while len(all_info[f"top 10 {col_name}"]) < 10:
         all_info[f"top 10 {col_name}"].append(("", 0))
-    return all_info
+    
 
 
 def get_stats(df, all_info):
     all_info["Twitter Activity"] = len(df.likes_count)
     all_info["Likes Counter"] = df.likes_count.sum()
     all_info["Retweets Counter"] = df.retweets_count.sum()
-    return all_info
+    
 
 
 def plot_daily(df, all_info):
@@ -126,7 +125,7 @@ def plot_daily(df, all_info):
     li_ = list(day_data.keys())
     all_info["day_highest"] = li_[1] if li_[0] == -1 else li_[0]
     all_info["day_plot"] = fig
-    return all_info
+    
 
 
 def plot_monthly(df, all_info):
@@ -151,7 +150,7 @@ def plot_monthly(df, all_info):
     fig.update_layout(title_text="Number of Tweets over the year", title_x=0.28)
     all_info["month_highest"] = list(month_data.keys())[0]
     all_info["month_plot"] = fig
-    return all_info
+    
 
 
 def lang_pie(df, all_info):
@@ -174,7 +173,7 @@ def lang_pie(df, all_info):
     fig.update_traces(textposition='inside', textinfo='percent+label')
     fig.update_layout(title_text="Languages (Except English) identified by twitter", title_x=0.15)
     all_info["lang_pie"] = fig
-    return all_info
+    
 
 def remove_spam(uc2, all_info):
     to_remove = []
@@ -198,21 +197,25 @@ def count_users(df, all_info):
     )
     fig.update_layout(title_text="Maximum total tweets from a single username", title_x=0.15)
     all_info["count_users"] = fig
-    return all_info
+
+
+def get_paper(df):
+    pass
+
 
 
 def process_data(df, all_info):
-    all_info = get_stats(df, all_info)
-    all_info = print_top(df, "mentions", all_info)
-    all_info = print_top(df, "hashtags", all_info)
-    all_info = print_top(df, "urls", all_info)
-    all_info = plot_monthly(df, all_info)
-    all_info = plot_daily(df, all_info)
-    all_info = top_tweets(df, all_info)
-    all_info = top_retweets(df, all_info)
-    all_info = lang_pie(df, all_info)
-    all_info = count_users(df, all_info)
-    return all_info
+    get_stats(df, all_info)
+    print_top(df, "mentions", all_info)
+    print_top(df, "hashtags", all_info)
+    print_top(df, "urls", all_info)
+    plot_monthly(df, all_info)
+    plot_daily(df, all_info)
+    top_tweets(df, all_info)
+    top_retweets(df, all_info)
+    lang_pie(df, all_info)
+    count_users(df, all_info)
+    get_paper(df)
 
 
 def clean_data(name, tweet_list, all_info, first_run=False):
@@ -249,13 +252,12 @@ def clean_data(name, tweet_list, all_info, first_run=False):
                 "geo",
                 "near",
                 "place",
-                "tweet",
             ]
         )
     if (first_run):
         data_df.to_pickle(f"./data/{name}.pkl")
-        all_info = process_data(data_df, all_info)
-        return all_info
+        process_data(data_df, all_info)
+        
 
     with open(f"./data/{name}.pkl", "rb") as f:
         ori_df = pd.read_pickle(f)
@@ -265,16 +267,16 @@ def clean_data(name, tweet_list, all_info, first_run=False):
     final_df.drop_duplicates(inplace=True, subset=["id", "date", "time", "username", "name"], ignore_index=True)
     final_df.to_pickle(f"./data/{name}.pkl")
 
-    all_info = process_data(final_df, all_info)
-    return all_info
+    process_data(final_df, all_info)
+    
 
 
 def show_prev_tweets(name, all_info):
     with open(f"./data/{name}.pkl", "rb") as f:
         final_df = pd.read_pickle(f)
     
-    all_info = process_data(final_df, all_info)
-    return all_info
+    process_data(final_df, all_info)
+    
 
 def add_comas(num):
     ans = ""
@@ -295,8 +297,10 @@ def run_all(name, all_info, first_run=False):
         rel_date = 200
     try:
         all_tweets = scrape(to_search=name, rel_date = rel_date)
-        all_info = clean_data(name, all_tweets, all_info, first_run=first_run)
+        clean_data(name, all_tweets, all_info, first_run=first_run)
     except Exception:
-        all_info = show_prev_tweets(name, all_info)
+        show_prev_tweets(name, all_info)
 
-    return all_info
+
+all_ = dict()
+run_all("#EMNLP2020", all_, True)
