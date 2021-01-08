@@ -8,27 +8,30 @@ import datetime
 import csv
 import twint
 import re
-
+import requests
+import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup
 
 names = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "June",
-        "July",
-        "Aug",
-        "Sept",
-        "Oct",
-        "Nov",
-        "Dec",
-    ]
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "June",
+    "July",
+    "Aug",
+    "Sept",
+    "Oct",
+    "Nov",
+    "Dec",
+]
+
 
 def get_codes():
     lang_codes = dict()
-    with open('lang_codes.csv', mode='r') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter =',')
+    with open("lang_codes.csv", mode="r") as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=",")
         next(csv_reader)
         for row in csv_reader:
             lang_codes[row[1]] = row[0]
@@ -39,7 +42,7 @@ def scrape(to_search="", rel_date=5):
     toda = datetime.date.today()
     fin = toda + datetime.timedelta(days=-rel_date)
     tweets_objects = []
-    if to_search=="#ACL2020":
+    if to_search == "#ACL2020":
         to_search = "#acl2020nlp"
     c = twint.Config(
         Since=f"{fin.year}-{fin.month}-{fin.day}",
@@ -53,7 +56,6 @@ def scrape(to_search="", rel_date=5):
 
     twint.run.Search(c)
     return tweets_objects
-
 
 
 def top_tweets(df, all_info):
@@ -71,7 +73,6 @@ def top_retweets(df, all_info):
         if a not in top_tweet_:
             final_arr.append(a)
     all_info["retweet_ids"] = final_arr
-
 
 
 def print_top(data_df, col_name, all_info):
@@ -93,18 +94,17 @@ def print_top(data_df, col_name, all_info):
         all_info[f"top 10 {col_name}"].append(("", 0))
 
 
-
 def get_stats(df, all_info):
     all_info["Twitter Activity"] = len(df.likes_count)
     all_info["Likes Counter"] = df.likes_count.sum()
     all_info["Retweets Counter"] = df.retweets_count.sum()
 
 
-
 def plot_daily(df, all_info):
     df["day"] = df["date"].apply(
         lambda x: int(x.split("-")[2])
-        if f"{names[int(x.split('-')[1]) - 1]}, {x.split('-')[0][-2:]}" == all_info["month_highest"]
+        if f"{names[int(x.split('-')[1]) - 1]}, {x.split('-')[0][-2:]}"
+        == all_info["month_highest"]
         else -1
     )
     day_data = df["day"].value_counts().to_dict()
@@ -120,7 +120,8 @@ def plot_daily(df, all_info):
         labels={"x": "day", "y": "Activity"},
     )
     fig.update_layout(
-        title_text=f"Daily tweet count for month with highest number of tweets ({all_info['month_highest']})", title_x=0.08
+        title_text=f"Daily tweet count for month with highest number of tweets ({all_info['month_highest']})",
+        title_x=0.08,
     )
     # fig.show()
     li_ = list(day_data.keys())
@@ -128,14 +129,15 @@ def plot_daily(df, all_info):
     all_info["day_plot"] = fig
 
 
-
 def plot_monthly(df, all_info):
-    df["month"] = df["date"].apply(lambda x: f"{names[int(x.split('-')[1]) - 1]}, {x.split('-')[0][-2:]}")
+    df["month"] = df["date"].apply(
+        lambda x: f"{names[int(x.split('-')[1]) - 1]}, {x.split('-')[0][-2:]}"
+    )
     month_data = df["month"].value_counts().to_dict()
     yr = datetime.date.today().year
     month_data2 = OrderedDict()
 
-    for year in range(yr-2, yr+1):
+    for year in range(yr - 2, yr + 1):
         for month in names:
             key = f"{month}, {str(year)[-2:]}"
             if key not in month_data.keys():
@@ -153,7 +155,6 @@ def plot_monthly(df, all_info):
     all_info["month_plot"] = fig
 
 
-
 def lang_pie(df, all_info):
     lang_code = get_codes()
     lang_count = df["lang"].value_counts().to_dict()
@@ -164,25 +165,25 @@ def lang_pie(df, all_info):
         _ = 0
     x = []
     y = []
-    for k,v in lang_count.items():
+    for k, v in lang_count.items():
         if k not in lang_code.keys():
             x.append("unknown")
         else:
             x.append(lang_code[k])
         y.append(v)
-    fig = px.pie(names = x, values = y)
-    fig.update_traces(textposition='inside', textinfo='percent+label')
-    fig.update_layout(title_text="Languages (Except English) identified by twitter", title_x=0.15)
+    fig = px.pie(names=x, values=y)
+    fig.update_traces(textposition="inside", textinfo="percent+label")
+    fig.update_layout(
+        title_text="Languages (Except English) identified by twitter", title_x=0.15
+    )
     all_info["lang_pie"] = fig
 
 
 def remove_spam(uc2, all_info):
     to_remove = []
     for k, v in uc2.items():
-        if v>(0.15*all_info["Twitter Activity"]):
+        if v > (0.15 * all_info["Twitter Activity"]):
             to_remove.append(k)
-            print(to_remove)
-
     for key in to_remove:
         uc2.pop(key)
     return uc2
@@ -197,28 +198,75 @@ def count_users(df, all_info):
         y=uc2.values(),
         labels={"x": "Username", "y": "Total Number of Tweets"},
     )
-    fig.update_layout(title_text="Maximum total tweets from a single username", title_x=0.15)
+    fig.update_layout(
+        title_text="Maximum total tweets from a single username", title_x=0.15
+    )
     all_info["count_users"] = fig
 
 
-def capture_strings(s):
-    pattern = re.compile(r"\"(.*:.*)\"")
-    st = re.match(pattern, s)
-    if st is None:
-        pattern2 = re.compile(r"\"(.*-.*)\"")
-        st = re.match(pattern2, s)
-        if st is None:
-            return ""
-    li = st.group(0).split(" ")
-    if li[0][0]!=li[0][0].upper():
-        return ""
-    return (st.group(0))
+def get_xml(name):
+    url = f"https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/{name}.xml"
+    r = requests.get(url, stream=True, allow_redirects=True)
+    with open(f"./xml/{name}.xml", "wb") as f:
+        f.write(r.content)
 
 
-def get_paper(df):
-    df["paper"] = df["tweet"].apply(capture_strings)
-    print(df["paper"].value_counts())
+def parse_xml(paper):
+    name = paper.split("-")[0]
+    if not os.path.exists(f"./xml/{name}.xml"):
+        get_xml(name)
 
+    with open(f"./xml/{name}.xml") as f:
+        soup = BeautifulSoup(f, "lxml")
+
+    tit = soup.find("url", text=paper).parent.title
+    if tit is None:
+        print(paper)
+        return None
+    title = tit.text
+    regex = r"<.*?>"
+    result = re.sub(regex, "", title)
+    return result
+
+
+def get_title(all_info):
+    for paper in all_info["top_papers"]:
+        if paper == "":
+            continue
+        result = parse_xml(paper)
+        if result:
+            all_info["top_paper_names"].append(result)
+    for _ in range(len(all_info["top_paper_names"]), 10):
+        all_info["top_paper_names"].append("")
+
+
+def capture_strings(lis, cnt):
+    pattern = re.compile(r"^https?://www\.aclweb\.org/anthology/(.*?)/?(\.pdf)?$")
+    for link in lis:
+        match = re.match(pattern, link)
+        if match:
+            cnt[match.group(1)] += 1
+
+
+def get_paper(df, all_info):
+    all_links = df["urls"].to_list()
+    cnt = Counter()
+    for row in all_links:
+        if len(row) == 0:
+            continue
+        capture_strings(row, cnt)
+    print(cnt.most_common(10))
+    all_info["top_papers"] = list()
+    for item in cnt.most_common(10):
+        if item[1] < 2:
+            break
+        else:
+            all_info["top_papers"].append(item[0])
+    for _ in range(len(all_info["top_papers"]), 10):
+        all_info["top_papers"].append("")
+    all_info["total_paper_mentions"] = len(cnt)
+    all_info["top_paper_names"] = list()
+    get_title(all_info)
 
 
 def process_data(df, all_info):
@@ -232,16 +280,14 @@ def process_data(df, all_info):
     top_retweets(df, all_info)
     lang_pie(df, all_info)
     count_users(df, all_info)
-    # get_paper(df)
+    get_paper(df, all_info)
 
 
 def clean_data(name, tweet_list, all_info, first_run=False):
     data_df = pd.DataFrame([t.__dict__ for t in tweet_list])
     if not (data_df.empty):
 
-        data_df = data_df.rename(
-            columns={"datestamp": "date", "timestamp": "time"}
-        )
+        data_df = data_df.rename(columns={"datestamp": "date", "timestamp": "time"})
         data_df = data_df.drop(
             columns=[
                 "conversation_id",
@@ -272,21 +318,24 @@ def clean_data(name, tweet_list, all_info, first_run=False):
                 "tweet",
             ]
         )
-    if (first_run):
+    if first_run:
         data_df.to_pickle(f"./data/{name}.pkl")
         process_data(data_df, all_info)
-
+        return
 
     with open(f"./data/{name}.pkl", "rb") as f:
         ori_df = pd.read_pickle(f)
 
     os.remove(f"./data/{name}.pkl")
     final_df = ori_df.append(data_df, ignore_index=True)
-    final_df.drop_duplicates(inplace=True, subset=["id", "date", "time", "username", "name"], ignore_index=True)
+    final_df.drop_duplicates(
+        inplace=True,
+        subset=["id", "date", "time", "username", "name"],
+        ignore_index=True,
+    )
     final_df.to_pickle(f"./data/{name}.pkl")
 
     process_data(final_df, all_info)
-
 
 
 def show_prev_tweets(name, all_info):
@@ -314,11 +363,11 @@ def run_all(name, all_info, first_run=False):
     if first_run:
         rel_date = 200
     try:
-        all_tweets = scrape(to_search=name, rel_date = rel_date)
+        all_tweets = scrape(to_search=name, rel_date=rel_date)
         clean_data(name, all_tweets, all_info, first_run=first_run)
     except Exception:
         show_prev_tweets(name, all_info)
 
 
 # all_ = dict()
-# run_all("#EMNLP2020", all_, True)
+# run_all("#ACL2020", all_)
