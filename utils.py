@@ -7,6 +7,7 @@ import sys
 import datetime
 import csv
 import twint
+import re
 
 
 names = [
@@ -39,15 +40,15 @@ def scrape(to_search="", rel_date=5):
     fin = toda + datetime.timedelta(days=-rel_date)
     tweets_objects = []
     if to_search=="#ACL2020":
-        to_search = "#acl2020nlp" 
+        to_search = "#acl2020nlp"
     c = twint.Config(
         Since=f"{fin.year}-{fin.month}-{fin.day}",
         Hide_output=True,
         Search=to_search,
         Store_object=True,
         Store_object_tweets_list=tweets_objects,
-        Store_csv = True,
-        Output = "data2"
+        # Store_csv = True,
+        # Output = "data2"
     )
 
     twint.run.Search(c)
@@ -59,7 +60,7 @@ def top_tweets(df, all_info):
     df2 = df.nlargest(8, ["likes_count"])
     arr = df2["id"].to_list()
     all_info["tweet_ids"] = arr
-    
+
 
 def top_retweets(df, all_info):
     df2 = df.nlargest(16, ["retweets_count"])
@@ -70,7 +71,7 @@ def top_retweets(df, all_info):
         if a not in top_tweet_:
             final_arr.append(a)
     all_info["retweet_ids"] = final_arr
-    
+
 
 
 def print_top(data_df, col_name, all_info):
@@ -90,14 +91,14 @@ def print_top(data_df, col_name, all_info):
     all_info[f"top 10 {col_name}"] = cnt.most_common(10)
     while len(all_info[f"top 10 {col_name}"]) < 10:
         all_info[f"top 10 {col_name}"].append(("", 0))
-    
+
 
 
 def get_stats(df, all_info):
     all_info["Twitter Activity"] = len(df.likes_count)
     all_info["Likes Counter"] = df.likes_count.sum()
     all_info["Retweets Counter"] = df.retweets_count.sum()
-    
+
 
 
 def plot_daily(df, all_info):
@@ -125,7 +126,7 @@ def plot_daily(df, all_info):
     li_ = list(day_data.keys())
     all_info["day_highest"] = li_[1] if li_[0] == -1 else li_[0]
     all_info["day_plot"] = fig
-    
+
 
 
 def plot_monthly(df, all_info):
@@ -134,7 +135,7 @@ def plot_monthly(df, all_info):
     yr = datetime.date.today().year
     month_data2 = OrderedDict()
 
-    for year in range(yr-2, yr+1):    
+    for year in range(yr-2, yr+1):
         for month in names:
             key = f"{month}, {str(year)[-2:]}"
             if key not in month_data.keys():
@@ -150,7 +151,7 @@ def plot_monthly(df, all_info):
     fig.update_layout(title_text="Number of Tweets over the year", title_x=0.28)
     all_info["month_highest"] = list(month_data.keys())[0]
     all_info["month_plot"] = fig
-    
+
 
 
 def lang_pie(df, all_info):
@@ -173,13 +174,14 @@ def lang_pie(df, all_info):
     fig.update_traces(textposition='inside', textinfo='percent+label')
     fig.update_layout(title_text="Languages (Except English) identified by twitter", title_x=0.15)
     all_info["lang_pie"] = fig
-    
+
 
 def remove_spam(uc2, all_info):
     to_remove = []
     for k, v in uc2.items():
         if v>(0.15*all_info["Twitter Activity"]):
             to_remove.append(k)
+            print(to_remove)
 
     for key in to_remove:
         uc2.pop(key)
@@ -199,8 +201,23 @@ def count_users(df, all_info):
     all_info["count_users"] = fig
 
 
+def capture_strings(s):
+    pattern = re.compile(r"\"(.*:.*)\"")
+    st = re.match(pattern, s)
+    if st is None:
+        pattern2 = re.compile(r"\"(.*-.*)\"")
+        st = re.match(pattern2, s)
+        if st is None:
+            return ""
+    li = st.group(0).split(" ")
+    if li[0][0]!=li[0][0].upper():
+        return ""
+    return (st.group(0))
+
+
 def get_paper(df):
-    pass
+    df["paper"] = df["tweet"].apply(capture_strings)
+    print(df["paper"].value_counts())
 
 
 
@@ -215,7 +232,7 @@ def process_data(df, all_info):
     top_retweets(df, all_info)
     lang_pie(df, all_info)
     count_users(df, all_info)
-    get_paper(df)
+    # get_paper(df)
 
 
 def clean_data(name, tweet_list, all_info, first_run=False):
@@ -252,31 +269,32 @@ def clean_data(name, tweet_list, all_info, first_run=False):
                 "geo",
                 "near",
                 "place",
+                "tweet",
             ]
         )
     if (first_run):
         data_df.to_pickle(f"./data/{name}.pkl")
         process_data(data_df, all_info)
-        
+
 
     with open(f"./data/{name}.pkl", "rb") as f:
         ori_df = pd.read_pickle(f)
-    
+
     os.remove(f"./data/{name}.pkl")
     final_df = ori_df.append(data_df, ignore_index=True)
     final_df.drop_duplicates(inplace=True, subset=["id", "date", "time", "username", "name"], ignore_index=True)
     final_df.to_pickle(f"./data/{name}.pkl")
 
     process_data(final_df, all_info)
-    
+
 
 
 def show_prev_tweets(name, all_info):
     with open(f"./data/{name}.pkl", "rb") as f:
         final_df = pd.read_pickle(f)
-    
+
     process_data(final_df, all_info)
-    
+
 
 def add_comas(num):
     ans = ""
@@ -302,5 +320,5 @@ def run_all(name, all_info, first_run=False):
         show_prev_tweets(name, all_info)
 
 
-all_ = dict()
-run_all("#EMNLP2020", all_, True)
+# all_ = dict()
+# run_all("#EMNLP2020", all_, True)

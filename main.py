@@ -45,7 +45,7 @@ app.layout = html.Div(
                 width={"size": 2, "offset": 0}
             ),
             dbc.Col(
-                dbc.Button("Home (NLProc)", color="primary", className="mr-1", href="/", 
+                dbc.Button("Home (NLProc)", color="primary", className="mr-1", href="/",
                 style={"textAlign": "left", "margin-top": "10px", "fontSize": "16px"}),
                 width={"size": 2, "offset": 0}
             )],
@@ -102,26 +102,25 @@ def show_out(all_info):
                                 href=f"https://twitter.com/hashtag/{all_info['top 10 hashtags'][i][0]}?src=hashtag_click",
                             ),width={"size": 3}),
                         dbc.Col(html.A(
-                            f"@{all_info['top 10 mentions'][i][0]}" if int(all_info['top 10 mentions'][i][1])>0 else "", 
+                            f"@{all_info['top 10 mentions'][i][0]}" if int(all_info['top 10 mentions'][i][1])>0 else "",
                             href=f"https://twitter.com/{all_info['top 10 mentions'][i][0]}"
                             ),width={"size": 3}),
                         dbc.Col(html.A(f"{all_info['top 10 urls'][i][0]}" if int(all_info['top 10 urls'][i][1])>0 else "",
                         href=f"{all_info['top 10 urls'][i][0]}"),width={"size": 6})
                 ],
                 style={"textAlign": "center", "fontSize":"18px"},
-                ) 
+                )
                 for i in range(10)]
             ),
-            html.Div(
+            dbc.Row(
                 [
-                    html.Div(
+                    dbc.Col(
                         dcc.Graph(id="graph", figure=all_info["month_plot"]),
                     ),
-                    html.Div(
+                    dbc.Col(
                         dcc.Graph(id="graph2", figure=all_info["day_plot"]),
                     ),
                 ],
-                style={"columnCount": 2, "margin-top": "30px"},
             ),
             dbc.Row([
                 dbc.Col(dcc.Graph(id="graph3",figure=all_info["lang_pie"])),
@@ -241,8 +240,8 @@ def show_out(all_info):
 def display_page(pathname):
     all_info = dict()
 
-    known = {"/EMNLP2020", "/COLING2020", "/EACL2021", "/ACL2020"}
-    
+    known = {"/EMNLP2020", "/COLING2020", "/EACL2021", "/ACL2020",}
+
     if pathname == "/":
         all_info["name"] = "NLProc"
         run_all("#NLProc", all_info)
