@@ -1,3 +1,3 @@
-ps: scale web=1
+ps: scale web=2
 worker: python setup.py
-web: gunicorn main:server
+web: gunicorn --timeout 120 main:server 
