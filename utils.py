@@ -11,8 +11,9 @@ import re
 import requests
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
+import asyncio
 
-names = [
+month_names = [
     "Jan",
     "Feb",
     "Mar",
@@ -103,7 +104,7 @@ def get_stats(df, all_info):
 def plot_daily(df, all_info):
     df["day"] = df["date"].apply(
         lambda x: int(x.split("-")[2])
-        if f"{names[int(x.split('-')[1]) - 1]}, {x.split('-')[0][-2:]}"
+        if f"{month_names[int(x.split('-')[1]) - 1]}, {x.split('-')[0][-2:]}"
         == all_info["month_highest"]
         else -1
     )
@@ -131,14 +132,14 @@ def plot_daily(df, all_info):
 
 def plot_monthly(df, all_info):
     df["month"] = df["date"].apply(
-        lambda x: f"{names[int(x.split('-')[1]) - 1]}, {x.split('-')[0][-2:]}"
+        lambda x: f"{month_names[int(x.split('-')[1]) - 1]}, {x.split('-')[0][-2:]}"
     )
     month_data = df["month"].value_counts().to_dict()
     yr = datetime.date.today().year
     month_data2 = OrderedDict()
 
     for year in range(yr - 2, yr + 1):
-        for month in names:
+        for month in month_names:
             key = f"{month}, {str(year)[-2:]}"
             if key not in month_data.keys():
                 continue
