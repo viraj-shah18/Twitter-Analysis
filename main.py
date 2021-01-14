@@ -12,7 +12,7 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
 import plotly.express as px
-from utils import run_all, add_comas
+from utils import show_prev_tweets, add_comas
 
 external_stylesheets = [
     "https://codepen.io/chriddyp/pen/bWLwgP.css",
@@ -157,8 +157,11 @@ def show_out(all_info):
                                 width={"size": 3},
                             ),
                             dbc.Col(
-                                html.A(f"{all_info['top_paper_names'][i]}", href=f"https://www.aclweb.org/anthology/{all_info['top_papers'][i]}.pdf")
-                                , width={"size": 5}
+                                html.A(
+                                    f"{all_info['top_paper_names'][i]}",
+                                    href=f"https://www.aclweb.org/anthology/{all_info['top_papers'][i]}.pdf",
+                                ),
+                                width={"size": 5},
                             ),
                         ],
                         style={"textAlign": "center", "fontSize": "18px"},
@@ -295,8 +298,6 @@ def show_out(all_info):
 
 @app.callback(Output("page-content", "children"), [Input("home-page", "pathname")])
 def display_page(pathname):
-    all_info = dict()
-
     known = {
         "/EMNLP2020",
         "/COLING2020",
@@ -305,12 +306,10 @@ def display_page(pathname):
     }
 
     if pathname == "/":
-        all_info["name"] = "NLProc"
-        run_all("#NLProc", all_info)
+        all_info = show_prev_tweets("#NLProc")
         return show_out(all_info)
     elif pathname in known:
-        all_info["name"] = pathname[1:]
-        run_all(f"#{pathname[1:]}", all_info)
+        all_info = show_prev_tweets(f"#{pathname[1:]}")
         return show_out(all_info)
     else:
         return html.Div(html.H1("Please select one from the above given conferences"))
@@ -322,6 +321,6 @@ if __name__ == "__main__":
     # run_type = "PROD"
 
     if run_type == "LOCAL":
-        app.run_server(debug=True, port=50787)
+        app.run_server(debug=True)
     else:
-        app.run_server(host="0.0.0.0", debug=True)
+        app.run_server(host="0.0.0.0")

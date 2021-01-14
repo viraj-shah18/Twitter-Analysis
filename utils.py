@@ -11,7 +11,6 @@ import re
 import requests
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
-import asyncio
 
 month_names = [
     "Jan",
@@ -282,7 +281,7 @@ def process_data(df, all_info):
     get_paper(df, all_info)
 
 
-def clean_data(name, tweet_list, all_info, first_run=False):
+def clean_data(name, tweet_list, first_run=False):
     data_df = pd.DataFrame([t.__dict__ for t in tweet_list])
     if not (data_df.empty):
 
@@ -319,8 +318,7 @@ def clean_data(name, tweet_list, all_info, first_run=False):
         )
     if first_run:
         data_df.to_pickle(f"./data/{name}.pkl")
-        process_data(data_df, all_info)
-        return
+        return data_df
 
     with open(f"./data/{name}.pkl", "rb") as f:
         ori_df = pd.read_pickle(f)
@@ -333,16 +331,20 @@ def clean_data(name, tweet_list, all_info, first_run=False):
         ignore_index=True,
     )
     final_df.to_pickle(f"./data/{name}.pkl")
+    return final_df
 
-    process_data(final_df, all_info)
 
+def show_prev_tweets(name):
+    if os.path.exists(f"./data/processed_{name}.pkl"):    
+        with open(f"./data/processed_{name}.pkl", "rb") as f:
+            return pd.read_pickle(f)
 
-def show_prev_tweets(name, all_info):
+    all_info = dict()
+    all_info["name"] = name[1:]
     with open(f"./data/{name}.pkl", "rb") as f:
-        final_df = pd.read_pickle(f)
-
-    process_data(final_df, all_info)
-
+        data_df = pd.read_pickle(f)
+    process_data(data_df, all_info)
+    return all_info
 
 def add_comas(num):
     ans = ""
@@ -355,18 +357,3 @@ def add_comas(num):
         ans += a
         pl += 1
     return ans[::-1]
-
-
-def run_all(name, all_info, first_run=False):
-    rel_date = 5
-    if first_run:
-        rel_date = 200
-    try:
-        all_tweets = scrape(to_search=name, rel_date=rel_date)
-        clean_data(name, all_tweets, all_info, first_run=first_run)
-    except Exception:
-        show_prev_tweets(name, all_info)
-
-
-# all_ = dict()
-# run_all("#ACL2020", all_)
