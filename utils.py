@@ -207,6 +207,8 @@ def count_users(df, all_info):
 def get_xml(name):
     url = f"https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/{name}.xml"
     r = requests.get(url, stream=True, allow_redirects=True)
+    if r.status_code != 200:
+        return -1
     with open(f"./xml/{name}.xml", "wb") as f:
         f.write(r.content)
 
@@ -214,7 +216,9 @@ def get_xml(name):
 def parse_xml(paper):
     name = paper.split("-")[0]
     if not os.path.exists(f"./xml/{name}.xml"):
-        get_xml(name)
+        rc = get_xml(name)
+        if rc == -1:
+            return
 
     with open(f"./xml/{name}.xml") as f:
         soup = BeautifulSoup(f, "lxml")
@@ -335,7 +339,7 @@ def clean_data(name, tweet_list, first_run=False):
 
 
 def show_prev_tweets(name):
-    if os.path.exists(f"./data/processed_{name}.pkl"):    
+    if os.path.exists(f"./data/processed_{name}.pkl"):
         with open(f"./data/processed_{name}.pkl", "rb") as f:
             return pd.read_pickle(f)
 
@@ -345,6 +349,7 @@ def show_prev_tweets(name):
         data_df = pd.read_pickle(f)
     process_data(data_df, all_info)
     return all_info
+
 
 def add_comas(num):
     ans = ""

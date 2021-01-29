@@ -5,6 +5,8 @@ python main.py <HASHTAG>
 This command scrapes the all tweets pertaining to that hashtag from 1st Jan till the date
 """
 import urllib
+import os
+import pandas as pd
 
 import dash
 import dash_core_components as dcc
@@ -19,7 +21,12 @@ external_stylesheets = [
     dbc.themes.BOOTSTRAP,
 ]
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(
+    __name__,
+    external_stylesheets=external_stylesheets,
+    title="Twitter-Analysis",
+    update_title="Changing conference...",
+)
 server = app.server
 
 conf_options = ["EMNLP 2020", "COLING 2020", "EACL 2021", "ACL 2020"]
@@ -186,114 +193,158 @@ def show_out(all_info):
                 ]
             ),
             html.Div(
-                style={"textAlign": "center"}, children=[html.H1("Most Popular Tweets")]
-            ),
-            html.Div(
-                style={"rowCount": 2},
-                children=[
-                    html.Div(
-                        className="twitter-tweet twitter-tweet-rendered",
-                        children=[
-                            html.Iframe(
-                                style={
-                                    "position": "static",
-                                    "visibility": "visible",
-                                    "display": "block",
-                                    "flex-grow": 1,
-                                    "scrolling": "no",
-                                    "border": 0,
-                                    "frame": "false",
-                                    "margin-left": "15px",
-                                },
-                                src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
-                                lang="en",
-                                width="550px",
-                                height="550px",
-                            )
-                            for i in range(min(4, len(all_info["tweet_ids"])))
-                        ],
-                        style={
-                            "display": "flex",
-                            "max-width": "550px",
-                            "width": "100%",
-                            "margin-top": "10px",
-                            "margin-bottom": "10px",
-                        },
-                    ),
-                    html.Div(
-                        className="twitter-tweet twitter-tweet-rendered",
-                        children=[
-                            html.Iframe(
-                                style={
-                                    "position": "static",
-                                    "visibility": "visible",
-                                    "display": "block",
-                                    "flex-grow": 1,
-                                    "scrolling": "no",
-                                    "border": 0,
-                                    "frame": False,
-                                    "width": "100%",
-                                    "margin-left": "15px",
-                                },
-                                src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
-                                lang="en",
-                                width="550px",
-                                height="550px",
-                            )
-                            for i in range(
-                                min(4, len(all_info["tweet_ids"])),
-                                min(8, len(all_info["tweet_ids"])),
-                            )
-                        ],
-                        style={
-                            "display": "flex",
-                            "max-width": "550px",
-                            "margin-top": "10px",
-                            "margin-bottom": "10px",
-                        },
-                    ),
-                ],
-            ),
-            html.Div(
                 style={"textAlign": "center"},
-                children=[html.H1("Most Retweeted Tweets")],
-            ),
-            html.Div(
-                style={"rowCount": 2},
                 children=[
                     html.Div(
-                        className="twitter-tweet twitter-tweet-rendered",
                         children=[
-                            html.Iframe(
-                                style={
-                                    "position": "static",
-                                    "visibility": "visible",
-                                    "display": "block",
-                                    "flex-grow": 1,
-                                    "scrolling": "no",
-                                    "border": 0,
-                                    "frame": "false",
-                                    "margin-left": "15px",
-                                },
-                                src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['retweet_ids'][i]}&theme=light",
-                                lang="en",
-                                width="550px",
-                                height="550px",
-                            )
-                            for i in range(min(4, len(all_info["retweet_ids"])))
-                        ],
-                        style={
-                            "display": "flex",
-                            "max-width": "550px",
-                            "width": "100%",
-                            "margin-top": "10px",
-                            "margin-bottom": "10px",
-                        },
-                    ),
+                            html.H1("Most Popular Tweets"),
+                            dcc.Slider(
+                                id="recent-slider",
+                                min="Recent",
+                                max="All-Time",
+                                # value="All-Time",
+                                marks={"Recent", "All-Time"},
+                                step=None,
+                            ),
+                        ]
+                    )
                 ],
             ),
+            html.Div(id="tweet-content"),
         ]
     )
+
+
+def all_time_page(all_info):
+    html.Div(
+        html.Div(
+            children=[
+                html.Div(
+                    className="twitter-tweet twitter-tweet-rendered",
+                    children=[
+                        html.Iframe(
+                            style={
+                                "position": "static",
+                                "visibility": "visible",
+                                "display": "block",
+                                "flex-grow": 1,
+                                "scrolling": "no",
+                                "border": 0,
+                                "frame": "false",
+                                "margin-left": "15px",
+                            },
+                            src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
+                            lang="en",
+                            width="550px",
+                            height="550px",
+                        )
+                        for i in range(min(4, len(all_info["tweet_ids"])))
+                    ],
+                    style={
+                        "display": "flex",
+                        "max-width": "550px",
+                        "width": "100%",
+                        "margin-top": "10px",
+                        "margin-bottom": "10px",
+                    },
+                ),
+                html.Div(
+                    className="twitter-tweet twitter-tweet-rendered",
+                    children=[
+                        html.Iframe(
+                            style={
+                                "position": "static",
+                                "visibility": "visible",
+                                "display": "block",
+                                "flex-grow": 1,
+                                "scrolling": "no",
+                                "border": 0,
+                                "frame": False,
+                                "width": "100%",
+                                "margin-left": "15px",
+                            },
+                            src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
+                            lang="en",
+                            width="550px",
+                            height="550px",
+                        )
+                        for i in range(
+                            min(4, len(all_info["tweet_ids"])),
+                            min(8, len(all_info["tweet_ids"])),
+                        )
+                    ],
+                    style={
+                        "display": "flex",
+                        "max-width": "550px",
+                        "margin-top": "10px",
+                        "margin-bottom": "10px",
+                    },
+                ),
+            ],
+        ),
+        html.Div(
+            style={"textAlign": "center"},
+            children=[html.H1("Most Retweeted Tweets")],
+        ),
+        html.Div(
+            children=[
+                html.Div(
+                    className="twitter-tweet twitter-tweet-rendered",
+                    children=[
+                        html.Iframe(
+                            style={
+                                "position": "static",
+                                "visibility": "visible",
+                                "display": "block",
+                                "flex-grow": 1,
+                                "scrolling": "no",
+                                "border": 0,
+                                "frame": "false",
+                                "margin-left": "5px",
+                            },
+                            src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['retweet_ids'][i]}&theme=light",
+                            lang="en",
+                            width="550px",
+                            height="550px",
+                        )
+                        for i in range(min(4, len(all_info["retweet_ids"])))
+                    ],
+                    style={
+                        "display": "flex",
+                        "max-width": "550px",
+                        "width": "100%",
+                        "margin-top": "20px",
+                        "margin-bottom": "20px",
+                    },
+                ),
+            ],
+        ),
+    )
+
+
+def recent_page(all_info):
+    pass
+
+
+@app.callback(
+    Output("tweet-content", "children"),
+    [Input("recent-slider", "value"), Input("home-page", "pathname")],
+)
+def display_tweets(value, pathname):
+    if pathname == "/":
+        name = "NLProc"
+    else:
+        name = pathname[1:]
+    if os.path.exists(f"./data/processed_{name}.pkl"):
+        with open(f"./data/processed_{name}.pkl", "rb") as f:
+            all_info = pd.read_pickle(f)
+    if value == "All-Time":
+        return all_time_page(all_info)
+    else:
+        return html.Div("In Progress")
+    # if n_clicks % 2 == 0:
+    # else:
+    #     return recent_page(all_info)
 
 
 @app.callback(Output("page-content", "children"), [Input("home-page", "pathname")])
