@@ -11,6 +11,7 @@ import re
 import requests
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
+import datetime
 
 month_names = [
     "Jan",
@@ -56,6 +57,25 @@ def scrape(to_search="", rel_date=5):
 
     twint.run.Search(c)
     return tweets_objects
+
+
+def top_recent_tweets(df, all_info, info="tweets"):
+    df["date2"] = df["date"].apply(lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
+    delta = datetime.timedelta(days=-30)
+    df["recent"] = df["date2"].apply(lambda x: x >= (datetime.datetime.now() + delta))
+    recent_df = df.loc[df["recent"] == True]
+    df2 = recent_df.nlargest(8, ["likes_count"])
+    arr = df2["id"].to_list()
+    all_info["recent_tweet_ids"] = arr
+
+    df2 = recent_df.nlargest(12, ["retweets_count"])
+    arr = df2["id"].to_list()
+    final_arr = []
+    top_rtweet_ = set(all_info["recent_tweet_ids"])
+    for a in arr:
+        if a not in top_rtweet_:
+            final_arr.append(a)
+    all_info["recent_retweet_ids"] = final_arr
 
 
 def top_tweets(df, all_info):
@@ -123,7 +143,6 @@ def plot_daily(df, all_info):
         title_text=f"Daily tweet count for month with highest number of tweets ({all_info['month_highest']})",
         title_x=0.08,
     )
-    # fig.show()
     li_ = list(day_data.keys())
     all_info["day_highest"] = li_[1] if li_[0] == -1 else li_[0]
     all_info["day_plot"] = fig
@@ -148,7 +167,6 @@ def plot_monthly(df, all_info):
         x=month_data2.keys(),
         y=month_data2.values(),
         labels={"x": "month", "y": "Activity"},
-        # title="Twitter Activity in this year",
     )
     fig.update_layout(title_text="Number of Tweets over the year", title_x=0.28)
     all_info["month_highest"] = list(month_data.keys())[0]
@@ -243,27 +261,30 @@ def get_title(all_info):
         all_info["top_paper_names"].append("")
 
 
-def capture_strings(lis, cnt):
+def capture_strings(lis, cnt, reward):
     pattern = re.compile(r"^https?://www\.aclweb\.org/anthology/(.*?)/?(\.pdf)?$")
     for link in lis:
         match = re.match(pattern, link)
         if match:
-            cnt[match.group(1)] += 1
+            cnt[match.group(1)] += 5 + reward
 
 
 def get_paper(df, all_info):
-    all_links = df["urls"].to_list()
+    df["reward_count"] = (
+        df["likes_count"] + df["replies_count"] * 3 + df["retweets_count"] * 2
+    )
+
     cnt = Counter()
-    for row in all_links:
-        if len(row) == 0:
-            continue
-        capture_strings(row, cnt)
+    for row in df.itertuples():
+        capture_strings(row.urls, cnt, row.reward_count)
+
     all_info["top_papers"] = list()
     for item in cnt.most_common(10):
-        if item[1] < 2:
+        if item[1] < 20:
             break
         else:
             all_info["top_papers"].append(item[0])
+
     for _ in range(len(all_info["top_papers"]), 10):
         all_info["top_papers"].append("")
     all_info["total_paper_mentions"] = len(cnt)
@@ -279,6 +300,7 @@ def process_data(df, all_info):
     plot_monthly(df, all_info)
     plot_daily(df, all_info)
     top_tweets(df, all_info)
+    top_recent_tweets(df, all_info)
     top_retweets(df, all_info)
     lang_pie(df, all_info)
     count_users(df, all_info)

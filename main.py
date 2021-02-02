@@ -89,6 +89,21 @@ app.layout = html.Div(
         dcc.Loading(
             children=[html.Div(id="page-content")], type="default", id="loading"
         ),
+        html.Div(
+            style={"textAlign": "center"},
+            children=[
+                html.Div(
+                    children=[
+                        html.H1("Most Popular Tweets"),
+                        dbc.Button(
+                            n_clicks=0,
+                            id="recent-button",
+                        )                
+                    ]
+                )
+            ],
+        ),
+        html.Div(children=[html.Div(id="tweet-content")]),
     ],
 )
 
@@ -192,32 +207,20 @@ def show_out(all_info):
                     dbc.Col(dcc.Graph(id="graph4", figure=all_info["count_users"])),
                 ]
             ),
-            html.Div(
-                style={"textAlign": "center"},
-                children=[
-                    html.Div(
-                        children=[
-                            html.H1("Most Popular Tweets"),
-                            dcc.Slider(
-                                id="recent-slider",
-                                min="Recent",
-                                max="All-Time",
-                                # value="All-Time",
-                                marks={"Recent", "All-Time"},
-                                step=None,
-                            ),
-                        ]
-                    )
-                ],
-            ),
-            html.Div(id="tweet-content"),
         ]
     )
 
 
-def all_time_page(all_info):
-    html.Div(
-        html.Div(
+def all_time_page(all_info, cat):
+    if cat=="all_time":
+        tweet_list = all_info["tweet_ids"]
+        retweet_list = all_info["retweet_ids"]
+    else:
+        tweet_list = all_info["recent_tweet_ids"]
+        retweet_list = all_info["recent_retweet_ids"]
+    return html.Div(
+        children=[
+            html.Div(
             children=[
                 html.Div(
                     className="twitter-tweet twitter-tweet-rendered",
@@ -233,12 +236,12 @@ def all_time_page(all_info):
                                 "frame": "false",
                                 "margin-left": "15px",
                             },
-                            src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
+                            src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={tweet_list[i]}&theme=light",
                             lang="en",
                             width="550px",
                             height="550px",
                         )
-                        for i in range(min(4, len(all_info["tweet_ids"])))
+                        for i in range(min(4, len(tweet_list)))
                     ],
                     style={
                         "display": "flex",
@@ -263,14 +266,14 @@ def all_time_page(all_info):
                                 "width": "100%",
                                 "margin-left": "15px",
                             },
-                            src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['tweet_ids'][i]}&theme=light",
+                            src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={tweet_list[i]}&theme=light",
                             lang="en",
                             width="550px",
                             height="550px",
                         )
                         for i in range(
-                            min(4, len(all_info["tweet_ids"])),
-                            min(8, len(all_info["tweet_ids"])),
+                            min(4, len(tweet_list)),
+                            min(8, len(tweet_list)),
                         )
                     ],
                     style={
@@ -302,12 +305,12 @@ def all_time_page(all_info):
                                 "frame": "false",
                                 "margin-left": "5px",
                             },
-                            src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={all_info['retweet_ids'][i]}&theme=light",
+                            src=f"https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={retweet_list[i]}&theme=light",
                             lang="en",
                             width="550px",
                             height="550px",
                         )
-                        for i in range(min(4, len(all_info["retweet_ids"])))
+                        for i in range(min(4, len(retweet_list)))
                     ],
                     style={
                         "display": "flex",
@@ -319,18 +322,14 @@ def all_time_page(all_info):
                 ),
             ],
         ),
+        ]
     )
-
-
-def recent_page(all_info):
-    pass
-
 
 @app.callback(
     Output("tweet-content", "children"),
-    [Input("recent-slider", "value"), Input("home-page", "pathname")],
+    [Input("recent-button", "n_clicks"), Input("home-page", "pathname")],
 )
-def display_tweets(value, pathname):
+def display_tweets(n_clicks, pathname):
     if pathname == "/":
         name = "NLProc"
     else:
@@ -338,13 +337,32 @@ def display_tweets(value, pathname):
     if os.path.exists(f"./data/processed_{name}.pkl"):
         with open(f"./data/processed_{name}.pkl", "rb") as f:
             all_info = pd.read_pickle(f)
-    if value == "All-Time":
-        return all_time_page(all_info)
+    if n_clicks % 2 == 0:
+        return all_time_page(all_info, "all_time")
     else:
-        return html.Div("In Progress")
-    # if n_clicks % 2 == 0:
-    # else:
-    #     return recent_page(all_info)
+        return all_time_page(all_info, "recent")
+
+
+@app.callback(
+    Output("recent-button", "children"),
+    [Input("recent-button", "n_clicks")]
+)
+def display_name(n_clicks):
+    if n_clicks%2==0:
+        return "Recent"
+    else:
+        return "All-Time"
+
+@app.callback(
+    Output("recent-button", "color"),
+    [Input("recent-button", "n_clicks")],
+)
+def display_outline(n_clicks):
+    if n_clicks%2==0:
+        return "primary"
+    else:
+        return "secondary"
+
 
 
 @app.callback(Output("page-content", "children"), [Input("home-page", "pathname")])
