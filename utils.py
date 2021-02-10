@@ -51,6 +51,7 @@ def scrape(to_search="", rel_date=5):
         Search=to_search,
         Store_object=True,
         Store_object_tweets_list=tweets_objects,
+        Limit=10000
         # Store_csv = True,
         # Output = "data2"
     )
@@ -339,7 +340,7 @@ def clean_data(name, tweet_list, first_run=False):
                 "geo",
                 "near",
                 "place",
-                "tweet",
+                # "tweet",
             ]
         )
     if first_run:
@@ -384,3 +385,18 @@ def add_comas(num):
         ans += a
         pl += 1
     return ans[::-1]
+
+def create_regex():
+    with open("cfps.txt", "r") as f:
+        possible_calls = f.readlines()
+
+    for a in range(len(possible_calls)):
+        if a!=len(possible_calls)-1:
+            possible_calls[a] = possible_calls[a][:-1]
+        possible_calls[a] = possible_calls[a] + "s?"
+        possible_calls[a] = "[" + possible_calls[a][0] + possible_calls[a][0].lower()+"]" + possible_calls[a][1:]
+
+    final = "[cC]all for (" + "|".join(possible_calls) + ")"
+    return final
+
+# ^https?://(www\.)*?aclweb\.org/anthology/(.*?)/?(\.pdf)?$|^https?://(www\.)*?arxiv\.org/abs/(.*)*?$
