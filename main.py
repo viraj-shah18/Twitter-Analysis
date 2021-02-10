@@ -1,9 +1,3 @@
-"""
-Usage:
-python main.py <HASHTAG>
-
-This command scrapes the all tweets pertaining to that hashtag from 1st Jan till the date
-"""
 import urllib
 import os
 import pandas as pd
@@ -375,10 +369,10 @@ def display_page(pathname):
     }
 
     if pathname == "/":
-        all_info = show_prev_tweets("#NLProc")
+        all_info = show_prev_tweets("NLProc")
         return show_out(all_info)
     elif pathname in known:
-        all_info = show_prev_tweets(f"#{pathname[1:]}")
+        all_info = show_prev_tweets(f"{pathname[1:]}")
         return show_out(all_info)
     else:
         return html.Div(html.H1("Please select one from the above given conferences"))
