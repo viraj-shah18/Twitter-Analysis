@@ -9,6 +9,7 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
 import plotly.express as px
 from utils import show_prev_tweets, add_comas
+from cfp_page import cfp_page
 
 external_stylesheets = [
     "https://codepen.io/chriddyp/pen/bWLwgP.css",
@@ -326,6 +327,9 @@ def all_time_page(all_info, cat):
 def display_tweets(n_clicks, pathname):
     if pathname == "/":
         name = "NLProc"
+    elif pathname=="/CFP":
+        return html.Div("TO be implemented")
+    
     else:
         name = pathname[1:]
     if os.path.exists(f"./data/processed_{name}.pkl"):
@@ -374,6 +378,9 @@ def display_page(pathname):
     elif pathname in known:
         all_info = show_prev_tweets(f"{pathname[1:]}")
         return show_out(all_info)
+    elif pathname == "/CFP":
+        return cfp_page()
+    
     else:
         return html.Div(html.H1("Please select one from the above given conferences"))
 

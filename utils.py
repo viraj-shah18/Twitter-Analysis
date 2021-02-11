@@ -394,9 +394,48 @@ def create_regex():
         if a!=len(possible_calls)-1:
             possible_calls[a] = possible_calls[a][:-1]
         possible_calls[a] = possible_calls[a] + "s?"
-        possible_calls[a] = "[" + possible_calls[a][0] + possible_calls[a][0].lower()+"]" + possible_calls[a][1:]
+        # possible_calls[a] = "[" + possible_calls[a][0] + possible_calls[a][0].lower()+"]" + possible_calls[a][1:]
 
-    final = "[cC]all for (" + "|".join(possible_calls) + ")"
+    final = ".*[cC]all.[fF]or.(" + "|".join(possible_calls) + ")"
     return final
 
+
+def curate_cfp_schedule():
+    with open("./data/#NLProc.pkl", "rb") as f:
+        nlproc_df = pd.read_pickle(f)
+
+    with open("./data/#nlp.pkl", "rb") as f:
+        nlp_df = pd.read_pickle(f)
+
+    nlproc_df["cfp"] = nlproc_df["tweet"].apply(curate_cfp)
+    nlp_df["cfp"] = nlp_df["tweet"].apply(curate_cfp)
+    df = nlproc_df[nlproc_df["cfp"]==1]
+    print(len(df.index))
+    # df = df.append(nlproc_df[nlproc_df["cfp"]==1])
+    # print(len(df.index))
+    with open("./data/curate_cfps.pkl", "wb") as f:
+        pd.to_pickle(df, f, protocol=pickle.HIGHEST_PROTOCOL)
+    return    
+    
+
+def curate_cfp(tweet):
+    tmp = create_regex()
+    # print(tmp)
+    # tmp = r".*[cC]all.[fF]or[ -]?([Pp]apers?|[Dd]emos?|[Ww]orkshops?|[Ss]ystem [Dd]emonstrations?)"
+    pattern1 = re.compile(tmp)
+    match1 = re.match(pattern1, tweet)
+    if match1:
+        return 1
+    pattern2 = re.compile("cfps?", re.IGNORECASE)
+    match2 = re.match(pattern2, tweet)
+    if match2:
+        return 1
+    return 0
+
+# def check_curate():
+#     with open("./data/curate_cfps.pkl", "rb") as f:
+#         df = pd.read_pickle(f)
+
+# curate_cfp_schedule()
+# check_curate()
 # ^https?://(www\.)*?aclweb\.org/anthology/(.*?)/?(\.pdf)?$|^https?://(www\.)*?arxiv\.org/abs/(.*)*?$
