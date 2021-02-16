@@ -195,12 +195,14 @@ def show_out(all_info):
                         dcc.Graph(id="graph2", figure=all_info["day_plot"]),
                     ),
                 ],
+                style = {"margin-bottom":"15px", "margin-left":"15px", "margin-right":"15px", "margin-top":"20px"}
             ),
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="graph3", figure=all_info["lang_pie"])),
                     dbc.Col(dcc.Graph(id="graph4", figure=all_info["count_users"])),
-                ]
+                ],
+                style = {"margin-bottom":"15px", "margin-left":"15px", "margin-right":"15px", "margin-top":"20px"}
             ),
         ]
     )

@@ -12,6 +12,7 @@ import requests
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 import datetime
+import spacy
 
 month_names = [
     "Jan",
@@ -19,14 +20,15 @@ month_names = [
     "Mar",
     "Apr",
     "May",
-    "June",
-    "July",
+    "Jun",
+    "Jul",
     "Aug",
-    "Sept",
+    "Sep",
     "Oct",
     "Nov",
     "Dec",
 ]
+nlp = spacy.load("en_core_web_sm")
 
 
 def get_codes():
@@ -269,6 +271,10 @@ def capture_strings(lis, cnt, reward):
         if match:
             cnt[match.group(1)] += 5 + reward
 
+        # for match_ in match:
+        # if match:
+        # cnt[match[0].group(1)] += 5 + reward
+
 
 def get_paper(df, all_info):
     df["reward_count"] = (
@@ -386,15 +392,15 @@ def add_comas(num):
         pl += 1
     return ans[::-1]
 
+
 def create_regex():
     with open("cfps.txt", "r") as f:
         possible_calls = f.readlines()
 
     for a in range(len(possible_calls)):
-        if a!=len(possible_calls)-1:
+        if a != len(possible_calls) - 1:
             possible_calls[a] = possible_calls[a][:-1]
         possible_calls[a] = possible_calls[a] + "s?"
-        # possible_calls[a] = "[" + possible_calls[a][0] + possible_calls[a][0].lower()+"]" + possible_calls[a][1:]
 
     final = ".*[cC]all.[fF]or.(" + "|".join(possible_calls) + ")"
     return final
@@ -404,30 +410,95 @@ def curate_cfp_schedule():
     with open("./data/#NLProc.pkl", "rb") as f:
         nlproc_df = pd.read_pickle(f)
 
-    with open("./data/#nlp.pkl", "rb") as f:
-        nlp_df = pd.read_pickle(f)
-
     nlproc_df["cfp"] = nlproc_df["tweet"].apply(curate_cfp)
-    nlp_df["cfp"] = nlp_df["tweet"].apply(curate_cfp)
-    df = nlproc_df[nlproc_df["cfp"]==1]
-    print(len(df.index))
-    # df = df.append(nlproc_df[nlproc_df["cfp"]==1])
+    df = nlproc_df[nlproc_df["cfp"] == 1]
     # print(len(df.index))
+
+    with open("./conferences_c.txt", "r") as f:
+        all_conf = f.readlines()
+
+    for conf in all_conf:
+        name = conf.rstrip()
+        with open(f"./data/#{name}.pkl", "rb") as f:
+            tmp_df = pd.read_pickle(f)
+            tmp_df["cfp"] = tmp_df["tweet"].apply(curate_cfp)
+            df = df.append(tmp_df[tmp_df["cfp"] == 1])
+            # print(len(df.index))
+
+    df = df.sort_values(by=["id"], ascending=False)
+    df.drop_duplicates(
+        inplace=True,
+        subset=["id"],
+        ignore_index=True,
+    )
+    df["duedate"] = df["tweet"].apply(get_date)
     with open("./data/curate_cfps.pkl", "wb") as f:
         pd.to_pickle(df, f, protocol=pickle.HIGHEST_PROTOCOL)
-    return    
-    
+    return
+
+
+def get_month(date):
+    regex = "|".join(month_names)
+    pattern = re.compile(f"({regex}.* )")
+    match = re.findall(pattern, date)
+    if match:
+        # print(match)
+        return month_names.index(match[0][:3]) + 1
+    return 0
+
+
+def get_day(date):
+    pattern = re.compile(r"\b(\d{1,2})-?(/d{1,2})?(th)?\b")
+    match = re.findall(pattern, date)
+    if match:
+        # print("match", match[0], "-",date)
+        if type(match[0]) == tuple:
+            return int(match[0][0])
+        else:
+            return int(match[0])
+    return 28
+
+
+def get_year(date):
+    pattern = re.compile(r"\b(\d{4})\b", re.MULTILINE)
+    match = re.findall(pattern, date)
+    if match:
+        return int(match[0])
+    return 2020
+
+
+def get_date(tweet):
+    doc = nlp(tweet)
+    dates = []
+    for e in doc.ents:
+        if len(e) != 0 and e.label_ == "DATE":
+            dates.append(e.text)
+
+    if len(dates) == 0:
+        return 0
+    dt_format = []
+    for date in dates:
+        month = get_month(date)
+        day = get_day(date)
+        year = get_year(date)
+        # print(date, day, month, year, sep="--")
+        if month != 0:
+            dt_format.append(
+                datetime.datetime.strptime(f"{day}-{month}-{year}", "%d-%m-%Y")
+            )
+    if len(dt_format) != 0:
+        return min(dt_format)
+    return 0
+
 
 def curate_cfp(tweet):
     tmp = create_regex()
-    # print(tmp)
-    # tmp = r".*[cC]all.[fF]or[ -]?([Pp]apers?|[Dd]emos?|[Ww]orkshops?|[Ss]ystem [Dd]emonstrations?)"
     pattern1 = re.compile(tmp)
-    match1 = re.match(pattern1, tweet)
+    match1 = re.findall(pattern1, tweet)
     if match1:
         return 1
     pattern2 = re.compile("cfps?", re.IGNORECASE)
-    match2 = re.match(pattern2, tweet)
+    match2 = re.findall(pattern2, tweet)
     if match2:
         return 1
     return 0
