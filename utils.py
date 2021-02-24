@@ -460,11 +460,12 @@ def get_day(date):
 
 
 def get_year(date):
-    pattern = re.compile(r"\b(\d{4})\b", re.MULTILINE)
+    pattern = re.compile(r"(\d{4})")
     match = re.findall(pattern, date)
     if match:
+        # print(int(match[0]))
         return int(match[0])
-    return 2020
+    return 2021
 
 
 def get_date(tweet):
